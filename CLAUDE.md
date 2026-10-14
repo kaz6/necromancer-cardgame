@@ -45,18 +45,19 @@
 | 文書 | 正本 | 写し |
 |---|---|---|
 | DECISION_LOG | **Notion**（設計判断はチャット側が書く） | `docs/DECISION_LOG.md` |
-| SESSION_STATE | **repo**（`docs/SESSION_STATE.md`。Claude Code が書く） | Notion の写し（閲覧用・毎回全置換） |
-| CURRENT_SPEC | **repo**（`docs/CURRENT_SPEC.md`。実装を見て Claude Code が書く） | Notion の写し（閲覧用・毎回全置換） |
+| SESSION_STATE | **repo**（`docs/SESSION_STATE.md`。Claude Code が書く） | Notion の写し（閲覧用・生成物。session-end が更新） |
+| CURRENT_SPEC | **repo**（`docs/CURRENT_SPEC.md`。実装を見て Claude Code が書く） | Notion の写し（閲覧用・生成物。session-end が更新） |
 | 企画ページ・_tasks | **Notion** | なし |
 
 - 写しの先頭には「写し／生成物であり正本ではない・正本の場所・日時」の宣言を置く。**宣言を消さない。**
 - 正本が Notion の文書（DECISION_LOG）が食い違ったら **Notion が正しい**。docs 側を直す。
-- 正本が repo の文書（SESSION_STATE・CURRENT_SPEC）は、Notion の写しを直接編集しない。直しても次の全置換で消える。
+- 正本が repo の文書（SESSION_STATE・CURRENT_SPEC）は、Notion の写しを直接編集しない。直しても次の更新で消える。
 - `docs/DECISION_LOG.md` を勝手に「正史」として書き換えない。ミラーの更新は人間の指示に従う。
-- 上の表以外の `docs/` のファイル（CONCEPT・REJECTED・NEXT_TASKS・ARCHITECTURE_PRINCIPLES・research/）は
-  **旧企画から引き継いだもの**。この企画の正本は未整備で、見直しは後続タスク（SESSION_STATE の「次にやること」）。
+- 上の表以外の `docs/` のファイル（`REJECTED.md`・`research/`）は
+  **旧企画から引き継いだ参照用の資料**（v0.2 まで・参照のみ・更新しない）。
+  この企画のコンセプトは Notion の企画ページにある（`CONCEPT.md` は置かない）。
 - セッション終了の手順は `.claude/skills/session-end/SKILL.md` に従う。
-  ★ ただし同スキルの「正本の向き」の節は旧企画のまま（SESSION_STATE の未確定項目）。**向きは本節が優先。**
+  同スキルは Notion のマスターの写しで、**企画固有の差分を持たない**。SESSION_STATE の向きは本節が決める（この企画は repo が正本）。
 
 ---
 
@@ -159,10 +160,9 @@
 ## 4. 作業時のルール
 
 - 実装前に `docs/SESSION_STATE.md` を読み、Notion の `_tasks` で自分のタスクのページを読む。
-  （`docs/NEXT_TASKS.md` は旧企画 CG- 時代のもの。参照のみ。）
 - 設計判断は **Notion の DECISION_LOG（§0）が正本**。Claude Code が判断を求められたら停止して報告し、
   裁定後に Notion へ記録する。`docs/DECISION_LOG.md` は写しなので直接足さない。
-  （形式: Notion 側の `# YYYY-MM-DD　タイトル`。）
+  （見出しの形: `## YYYY-MM-DD: 決定`。session-end のマスターに合わせてある。）
 - **却下した案は DECISION_LOG の各エントリの「却下した案」に理由込みで書く。** 蒸し返し防止が目的。
   v0.2 までの却下案（`docs/REJECTED.md`＝旧企画の却下案索引の写し）も有効。再提案しない。
   再提案する場合は「なぜ却下理由が変わったか」を先に述べる。
@@ -273,8 +273,7 @@ Notion 反映先
 │  ├ SESSION_STATE.md  正本（repo）。進捗・次にやること・未確定項目。Notion に写しを出す
 │  ├ DECISION_LOG.md   写し。正本は Notion の DECISION_LOG
 │  ├ REJECTED.md       旧企画の却下案索引の写し（v0.2 まで・参照のみ）
-│  ├ CONCEPT.md / NEXT_TASKS.md / ARCHITECTURE_PRINCIPLES.md   旧企画から引き継ぎ（見直し待ち）
-│  └ research/       調査・市場リサーチ・先行事例
+│  └ research/         旧企画から引き継いだ調査資料（参照のみ）
 ├ data/             中身は素の JSON。file:// から <script> で読むため拡張子は .js
 │  ├ cards.js       カード定義 + ルールフラグ（数値・効果はすべてここ）
 │  └ ai.js          CPU の評価関数の重み（ゲームのルールではないので cards.js とは分ける）

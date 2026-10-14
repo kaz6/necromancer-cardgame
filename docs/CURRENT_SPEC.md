@@ -1,5 +1,5 @@
-> **正本（repo）。写しは Notion の「CURRENT_SPEC（写し・閲覧用）」（`3f9a8a5d-fd45-8120-903f-d9b820b5dac4`）で、毎回全置換される生成物。** 直すのはこのファイル。Notion 側を直しても消える。
-> 作成: 2026-10-14 11:19 JST（NC-002）／根拠: コード HEAD `c7b26f1`（v0.2-final＝`7f78c8f` ＋ NC-001 の settings.json のみ。ゲームのコードは `7f78c8f` から無変更）／確かめ方: `js/engine.js`・`data/cards.js`・`server.js` を読み、`node js/engine.js`（123件成功）と `node js/ai.js`（16件成功）を実行。
+> **正本（repo）。写しは Notion の「CURRENT_SPEC（写し・閲覧用）」（`3f9a8a5d-fd45-8120-903f-d9b820b5dac4`）で、repo から生成される写し。** 直すのはこのファイル。Notion 側を直しても消える。
+> 作成: 2026-10-14 11:19 JST／更新: 2026-10-14 22:58 JST（NC-002）／根拠: コード HEAD `c7b26f1`（v0.2-final＝`7f78c8f` ＋ NC-001 の settings.json のみ。ゲームのコードは `7f78c8f` から無変更）／確かめ方: `js/engine.js`・`data/cards.js`・`server.js` を読み、`node js/engine.js`（123件成功）と `node js/ai.js`（16件成功）を実行。
 > 範囲: **いま実装されているルールだけ**を書く。まだ実装していない設計判断（殺して奪う・時限で朽ちる・壁・属性）は DECISION_LOG と企画ページにあり、末尾に所在だけ示す。
 > ※ ルールの値の正本は `data/cards.js` の `rules`。値が食い違ったらそちらが実装値。
 
@@ -96,4 +96,5 @@
 # この企画で決まっているが、まだ実装していないこと
 - 内容は DECISION_LOG（`3f9a8a5d-fd45-810f-bdd8-cde8a332542e`）と企画ページ（`3f8a8a5d-fd45-81f0-add6-f053a7c2f107`）にある。ここには複写しない。
 - 場の駒を狙って殺し、蘇らせて配下にする手段／駒が時限で朽ちる／壁（体力30・10ごと）／属性。これらは未実装で、現行のルールは上に書いた v0.2-final のまま。
+- 駒の「いま誰の配下か」は置かれている場所で決め、駒自身には持ち主（owner）だけを持たせる（DECISION_LOG 2026-10-14・U0）。現行の実装はまだ controller を駒に持たせている（上の「墓地」の節）。
 - v0.2 の仕様の経緯は旧企画の CURRENT_SPEC（`3b8a8a5d-fd45-81bd-b087-d9e61a87148d`・参照のみ）。
