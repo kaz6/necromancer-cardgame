@@ -1,5 +1,5 @@
 > **正本（repo）。写しは Notion の「SESSION_STATE（写し・閲覧用）」（`3f9a8a5d-fd45-818d-9757-f934f963dbe1`）で、repo から生成される写し。** 直すのはこのファイル。Notion 側を直しても次の更新で消える。
-> 更新: 2026-10-14 23:25 JST（NC-003）／コード HEAD `27d44f9`
+> 更新: 2026-10-14 23:19 JST（NC-003）／コード HEAD `27d44f9`
 
 # SESSION_STATE
 

@@ -1,5 +1,5 @@
 > **正本（repo）。写しは Notion の「CURRENT_SPEC（写し・閲覧用）」（`3f9a8a5d-fd45-8120-903f-d9b820b5dac4`）で、repo から生成される写し。** 直すのはこのファイル。Notion 側を直しても消える。
-> 作成: 2026-10-14 11:19 JST／更新: 2026-10-14 23:25 JST（NC-003）／根拠: コード HEAD `27d44f9`（v0.2-final＝`7f78c8f` からゲームの振る舞いは変わっていない。変えたのは駒の `controller` の欄を消したこと・LAN がシードを送らないこと・セルフテスト）／確かめ方: `js/engine.js`・`data/cards.js`・`server.js` を読み、`node js/engine.js`（131件成功）と `node js/ai.js`（16件成功）を実行。LAN は実サーバで確認。
+> 作成: 2026-10-14 11:19 JST／更新: 2026-10-14 23:19 JST（NC-003）／根拠: コード HEAD `27d44f9`（v0.2-final＝`7f78c8f` からゲームの振る舞いは変わっていない。変えたのは駒の `controller` の欄を消したこと・LAN がシードを送らないこと・セルフテスト）／確かめ方: `js/engine.js`・`data/cards.js`・`server.js` を読み、`node js/engine.js`（131件成功）と `node js/ai.js`（16件成功）を実行。LAN は実サーバで確認。
 > 範囲: **いま実装されているルールだけ**を書く。まだ実装していない設計判断（殺して奪う・時限で朽ちる・壁・属性）は DECISION_LOG と企画ページにあり、末尾に所在だけ示す。
 > ※ ルールの値の正本は `data/cards.js` の `rules`。値が食い違ったらそちらが実装値。
 
