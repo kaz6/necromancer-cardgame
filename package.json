@@ -1,6 +1,6 @@
 {
-  "name": "necro-cardgame",
+  "name": "necromancer-cardgame",
   "private": true,
-  "description": "持ち駒カードゲーム（仮） — HTML/JS モック",
-  "comment": "type は指定しない（CommonJS）。file:// から <script> で直接読めるようにするため、js/ と tools/ は ES モジュールを使わない。詳細は CLAUDE.md と docs/DECISION_LOG.md の CG-008。"
+  "description": "ネクロマンサーカードゲーム（仮） — HTML/JS モック",
+  "comment": "type は指定しない（CommonJS）。file:// から <script> で直接読めるようにするため、js/ と tools/ は ES モジュールを使わない。詳細は CLAUDE.md と 旧企画の DECISION_LOG の CG-008。"
 }
