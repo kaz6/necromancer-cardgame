@@ -30,6 +30,6 @@
 2. **セルフテストの「自分の墓地に自分のカードが存在しない」は、この企画では誤り**（NC-003 で直す）。`js/engine.js` の「5. 一貫法則」の検査（約1176行目）が、里帰りを違反として数える。DECISION_LOG 2026-10-14 のとおり、里帰りは仕掛けとして認める裁定。検査を「里帰りを認めたうえで保たれる不変条件」に置き換える。何を不変条件にするかは未決（controller と位置の一致が候補で、未確定項目0と関わる）。
 3. **スキルの向き**（判断待ち Q1）。
 4. **データにあって読まれないもの**。`rules.deckOutLoses` と `rules.necromancerCanAttack` は engine・ai・view・server のどこにも読む箇所がない。`data/cards.js` の `version`（"0.2"）と `updated`（"2026-08-11"）は古い。消す／読む／放置のどれかは未決。CLAUDE.md §2.7 は「engine は必ず rules を読む」前提なので、読まないフラグは規約と食い違う。
-5. **旧企画から引き継いだ docs**。CONCEPT.md・NEXT_TASKS.md（CG- 時代）・REJECTED.md（旧企画の却下案索引の写し）・ARCHITECTURE_PRINCIPLES.md・research/ は、この企画の正本が未整備。また `data/cards.js` の注記が `docs/DECISION_LOG.md「登場カードの供給源」` と `docs/REJECTED.md` を指しているが、前者は新しい DECISION_LOG に無い（旧企画の DECISION_LOG と git 履歴にある）。コードは NC-002 の範囲外のため触っていない。
+5. **旧企画から引き継いだ docs**。CONCEPT.md・NEXT_TASKS.md（CG- 時代）・REJECTED.md（旧企画の却下案索引の写し）・ARCHITECTURE_PRINCIPLES.md・research/ は、この企画の正本が未整備。また `data/cards.js` の注記が `docs/DECISION_LOG.md` の「登場カードの供給源」と `docs/REJECTED.md` を指しているが、前者は新しい DECISION_LOG に無い（旧企画の DECISION_LOG と git 履歴にある）。コードは NC-002 の範囲外のため触っていない。
 6. **企画ページ側の未裁定**（複写しない。企画ページ `3f8a8a5d-fd45-81f0-add6-f053a7c2f107` が正本）: 自分で体力を払って壁を割る案／ピッチを残すか／寿命の数え方／ターン制へのリアルタイム導入（保留）／受け手のアクションカード（検討中）／企画の優先順位（参謀の担当）。
 7. **v0.2 の未裁定のうち、この企画で生き返ったもの**（旧企画 SESSION_STATE `3b8a8a5d-fd45-81de-aeb2-f19d5c5275d1` の「判断待ち」「未確定項目」）: 盤面の厚み・ピッチ持ち越し・先攻1ターン目の攻撃制限・火草水の参照リソース。里帰りの表現は DECISION_LOG 2026-10-14 で決着済み（認める）。
