@@ -1,4 +1,4 @@
-# 持ち駒カードゲーム（仮）— HTML/JS モック
+# ネクロマンサーカードゲーム（仮）— HTML/JS モック
 
 遊び方は2通り。**普段どおりの1台プレイはサーバ不要**、LAN 対戦のときだけサーバを立てる。
 
@@ -41,7 +41,7 @@
 - 決着すると、サーバが対戦の完全ログ（CG-013 と同じ JSON 形式）を
   `docs/research/playtest_logs/lan/` に書き出し、保存先を画面（標準出力）に表示する。
   解析: `node tools/analyze_logs.js docs/research/playtest_logs/lan/`
-- この LAN 対戦は検証用の使い捨て実装（詳細は `docs/DECISION_LOG.md` の CG-019）。
+- この LAN 対戦は検証用の使い捨て実装（経緯は旧企画の DECISION_LOG の CG-019）。
 
 ## 検証
 
@@ -50,4 +50,5 @@ node js/engine.js   # engine のセルフテスト
 node js/ai.js       # CPU のセルフテスト
 ```
 
-詳しい作業規約は `CLAUDE.md`、仕様と経緯は `docs/` を参照（正本は Notion）。
+詳しい作業規約は `CLAUDE.md`、いま実装されているルールは `docs/CURRENT_SPEC.md`、
+進捗は `docs/SESSION_STATE.md`、設計判断は `docs/DECISION_LOG.md`（写し。正本は Notion）を参照。

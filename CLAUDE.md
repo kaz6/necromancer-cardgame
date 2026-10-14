@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-持ち駒カードゲーム（仮）— HTML/JS モック。
+ネクロマンサーカードゲーム（仮）— HTML/JS モック。
 
 このファイルは AI エージェント向けの作業契約書。**変更する前に必ず読むこと。**
 
@@ -9,34 +9,54 @@
 ## 0. Notion ページID
 
 ★ **検索で当てにいくことを禁止。必ずこの表から引くこと。**
-「DECISION_LOG」「SESSION_STATE」「CURRENT_SPEC」は**他企画にも同名ページが実在する**ため、
+「DECISION_LOG」「SESSION_STATE」「CURRENT_SPEC」は**他企画（旧企画を含む）にも同名ページが実在する**ため、
 検索すると別企画のページを踏む。
 
-| ページ | ID |
-|---|---|
-| 親（持ち駒カードゲーム（仮）） | `3b8a8a5d-fd45-81b7-a681-fe882d78be64` |
-| DECISION_LOG | `3b8a8a5d-fd45-8118-9c7f-fe1776262d0d` |
-| CURRENT_SPEC | `3b8a8a5d-fd45-81bd-b087-d9e61a87148d` |
-| 却下案索引 | `3b8a8a5d-fd45-8153-86b2-ec2c8cae40c4` |
-| SESSION_STATE | `3b8a8a5d-fd45-81de-aeb2-f19d5c5275d1` |
-| _tasks（実装タスク） | `3b8a8a5d-fd45-8197-9f70-d0e222660c63` |
-| 参照資料（調査・先行事例） | `3b8a8a5d-fd45-8132-90f6-d1df64f99c8c` |
-| 更新履歴 | `3b8a8a5d-fd45-81b3-8cf6-ef46ee0cff78` |
+### この企画（書き込み先はここだけ）
 
-タスク番号の接頭辞は **`CG-`**。新しいタスクを作る前に、必ず `_tasks` の進行中一覧を見ること。
+| ページ | ID | 正本 |
+|---|---|---|
+| 企画ページ（ネクロマンサーカードゲーム（仮）） | `3f8a8a5d-fd45-81f0-add6-f053a7c2f107` | Notion |
+| DECISION_LOG | `3f9a8a5d-fd45-810f-bdd8-cde8a332542e` | **Notion**（repo の `docs/DECISION_LOG.md` は写し） |
+| SESSION_STATE（写し・閲覧用） | `3f9a8a5d-fd45-818d-9757-f934f963dbe1` | **repo**（`docs/SESSION_STATE.md`。Notion は生成物） |
+| CURRENT_SPEC（写し・閲覧用） | `3f9a8a5d-fd45-8120-903f-d9b820b5dac4` | **repo**（`docs/CURRENT_SPEC.md`。Notion は生成物） |
+| _tasks（実装タスク） | `3f9a8a5d-fd45-8151-936f-f3f061b6b7ef` | Notion |
+
+タスク番号の接頭辞は **`NC-`**。`CG-` は旧企画のもの（このリポジトリのコード中の `CG-0xx` は旧企画時代の履歴）。
+新しいタスクを作る前に、必ず `_tasks` の進行中一覧を見ること。
+
+### v0.2 までの記録（参照のみ・書き込み禁止）
+
+旧企画「持ち駒カードゲーム（仮）」のページ。v0.2 までの記録はここにあり、**コピーしない**（二重に持つとどちらが正かで迷うため）。
+★ **読むだけ。ここへは何も書かない。** 設計判断・仕様・状態はすべて上の表のページへ書く。
+
+| ページ | ID | 読む場面 |
+|---|---|---|
+| 旧 CURRENT_SPEC | `3b8a8a5d-fd45-81bd-b087-d9e61a87148d` | v0.2 のルール（「以下は v0.2（凍結・参照のみ）」の節） |
+| 旧 DECISION_LOG | `3b8a8a5d-fd45-8118-9c7f-fe1776262d0d` | 2026-10-10 より前のエントリ（v0.2 までの設計判断） |
+| 却下案索引 | `3b8a8a5d-fd45-8153-86b2-ec2c8cae40c4` | v0.2 の却下案。★ **この企画にも効く。再提案しないこと** |
 
 ---
 
 ## 1. このリポジトリの位置づけ
 
-- **正本（Single Source of Truth）は Notion。** `docs/` はその AI 可読ミラーである。
-- Notion と `docs/` が食い違った場合、**Notion が正しい**。docs 側を直す。
-- `docs/` を勝手に「正史」として書き換えない。ミラーの更新は人間の指示に従う。
-- **本企画は SESSION_STATE・CURRENT_SPEC とも Notion が正本**（天使様と同じ扱い）。
-  遠征ギルドログとは向きが逆なので、あちらの記述をそのまま当てないこと。
-- ★ 将来、engine が仕様の実体になった時点で CURRENT_SPEC を repo 正本へ反転させる。
-  **反転の判定は人が行う。勝手に反転しないこと。**
+★ **正本の向きは文書ごとに違う（NC-002・2026-10-14）。** 向きは「誰が書くか」で決まる。
+
+| 文書 | 正本 | 写し |
+|---|---|---|
+| DECISION_LOG | **Notion**（設計判断はチャット側が書く） | `docs/DECISION_LOG.md` |
+| SESSION_STATE | **repo**（`docs/SESSION_STATE.md`。Claude Code が書く） | Notion の写し（閲覧用・毎回全置換） |
+| CURRENT_SPEC | **repo**（`docs/CURRENT_SPEC.md`。実装を見て Claude Code が書く） | Notion の写し（閲覧用・毎回全置換） |
+| 企画ページ・_tasks | **Notion** | なし |
+
+- 写しの先頭には「写し／生成物であり正本ではない・正本の場所・日時」の宣言を置く。**宣言を消さない。**
+- 正本が Notion の文書（DECISION_LOG）が食い違ったら **Notion が正しい**。docs 側を直す。
+- 正本が repo の文書（SESSION_STATE・CURRENT_SPEC）は、Notion の写しを直接編集しない。直しても次の全置換で消える。
+- `docs/DECISION_LOG.md` を勝手に「正史」として書き換えない。ミラーの更新は人間の指示に従う。
+- 上の表以外の `docs/` のファイル（CONCEPT・REJECTED・NEXT_TASKS・ARCHITECTURE_PRINCIPLES・research/）は
+  **旧企画から引き継いだもの**。この企画の正本は未整備で、見直しは後続タスク（SESSION_STATE の「次にやること」）。
 - セッション終了の手順は `.claude/skills/session-end/SKILL.md` に従う。
+  ★ ただし同スキルの「正本の向き」の節は旧企画のまま（SESSION_STATE の未確定項目）。**向きは本節が優先。**
 
 ---
 
@@ -132,16 +152,20 @@
 - **ロックステップ／ロールバック方式は採用しない。**
   本作は隠し情報（手札・デッキ）を持つため、全クライアントが完全な state を
   保持する前提の方式はチート耐性を満たさない。
-  → 詳細は `docs/DECISION_LOG.md` を参照。
+  → 詳細は旧企画の DECISION_LOG（§0 の参照のみの表）を参照。
 
 ---
 
 ## 4. 作業時のルール
 
-- 実装前に `docs/SESSION_STATE.md` と `docs/NEXT_TASKS.md` を読む。
-- 設計判断をしたら `docs/DECISION_LOG.md` に追記する（形式: `# YYYY-MM-DD｜タイトル`）。
-- **却下した案は `docs/REJECTED.md` に理由込みで書く。** 蒸し返し防止が目的。
-  REJECTED にある案を再提案しない。再提案する場合は「なぜ却下理由が変わったか」を先に述べる。
+- 実装前に `docs/SESSION_STATE.md` を読み、Notion の `_tasks` で自分のタスクのページを読む。
+  （`docs/NEXT_TASKS.md` は旧企画 CG- 時代のもの。参照のみ。）
+- 設計判断は **Notion の DECISION_LOG（§0）が正本**。Claude Code が判断を求められたら停止して報告し、
+  裁定後に Notion へ記録する。`docs/DECISION_LOG.md` は写しなので直接足さない。
+  （形式: Notion 側の `# YYYY-MM-DD　タイトル`。）
+- **却下した案は DECISION_LOG の各エントリの「却下した案」に理由込みで書く。** 蒸し返し防止が目的。
+  v0.2 までの却下案（`docs/REJECTED.md`＝旧企画の却下案索引の写し）も有効。再提案しない。
+  再提案する場合は「なぜ却下理由が変わったか」を先に述べる。
 - 調査・先行事例は `docs/research/` に置く。規約は `docs/research/README.md` を参照。
 - 未確定事項を勝手に確定させない。`docs/SESSION_STATE.md` の「未確定項目」を尊重する。
 
@@ -240,17 +264,16 @@ Notion 反映先
 ```
 /
 ├ CLAUDE.md          このファイル
-├ index.html         モックのエントリポイント
+├ index.html         モックのエントリポイント（1台プレイ・file:// で開く）
+├ lan.html / server.js / js/lan_client.js   LAN 対戦（権威サーバ型・node server.js）
 ├ .claude/skills/
 │  └ session-end/SKILL.md   セッション終了手順（マスターは Notion 02_operations）
-├ docs/              AI 可読ミラー（正本は Notion）
-│  ├ CONCEPT.md
-│  ├ CURRENT_SPEC.md
-│  ├ DECISION_LOG.md
-│  ├ REJECTED.md
-│  ├ SESSION_STATE.md
-│  ├ NEXT_TASKS.md
-│  ├ ARCHITECTURE_PRINCIPLES.md
+├ docs/              正本の向きは §1 の表のとおり（文書ごとに違う）
+│  ├ CURRENT_SPEC.md   正本（repo）。実装済みのルール。Notion に写しを出す
+│  ├ SESSION_STATE.md  正本（repo）。進捗・次にやること・未確定項目。Notion に写しを出す
+│  ├ DECISION_LOG.md   写し。正本は Notion の DECISION_LOG
+│  ├ REJECTED.md       旧企画の却下案索引の写し（v0.2 まで・参照のみ）
+│  ├ CONCEPT.md / NEXT_TASKS.md / ARCHITECTURE_PRINCIPLES.md   旧企画から引き継ぎ（見直し待ち）
 │  └ research/       調査・市場リサーチ・先行事例
 ├ data/             中身は素の JSON。file:// から <script> で読むため拡張子は .js
 │  ├ cards.js       カード定義 + ルールフラグ（数値・効果はすべてここ）
