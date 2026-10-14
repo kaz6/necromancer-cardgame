@@ -44,6 +44,7 @@ const {
   legalActions,
   canSummon,
   opponentOf,
+  controllerOf,
   attackOf,
   healthOf,
   PLAYERS,
@@ -286,7 +287,7 @@ function recordAction(before, after, action) {
     const b = before.cards[iid];
     if (!b || b.transformed || !after.cards[iid].transformed) continue;
     logLine(
-      after.cards[iid].controller,
+      controllerOf(after, iid),
       'death',
       `　${nameOf(after, iid)} が倒れたが後列へ退いた（${attackOf(after, iid)}/${healthOf(after, iid)}）`
     );
@@ -356,7 +357,8 @@ function startMatch(settings) {
     result: null,
   };
   room.actionLog = [];
-  logLine(null, 'turn', `設定: ${SETTING_DEFS.map((d) => `${d.label} ${choiceName(d, settings[d.key])}`).join('・')}／シード ${room.seed}`);
+  // ★ シードは actionLog に入れない（actionLog はそのままクライアントへ送られる。NC-003）
+  logLine(null, 'turn', `設定: ${SETTING_DEFS.map((d) => `${d.label} ${choiceName(d, settings[d.key])}`).join('・')}`);
   logLine(null, 'turn', `— ターン 1：${room.state.players[room.state.active].name} —`);
   room.phase = 'playing';
   room.rev++;
@@ -455,9 +457,11 @@ function stateResponse(pid) {
     defaults: SETTING_DEFAULTS,
   };
   if (room.phase === 'lobby' || !room.state) return base;
+  // ★ seed は載せない（NC-003）。シードと engine があれば初期状態を再現でき、
+  //   相手の手札とデッキの順を計算できてしまう（filterStateFor が rng を落とす意味がなくなる）。
+  //   シードはサーバの標準出力と、対戦後にサーバが書く完全ログ（writeMatchLog）にだけ出す。
   return {
     ...base,
-    seed: room.seed,
     state: filterStateFor(room.state, pid),
     log: room.actionLog.slice(-60),
   };
@@ -587,6 +591,6 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`相手に伝える URL:    http://${ip}:${PORT}/   （同じ Wi-Fi から開く）`);
   }
   if (addrs.length === 0) console.log('（LAN 内 IPv4 アドレスが見つからない。ipconfig / ifconfig で確認してください）');
-  console.log(`次の対戦のシード:    ${INITIAL_SEED}（--seed で指定可。対戦開始時にもログに出す）`);
+  console.log(`次の対戦のシード:    ${INITIAL_SEED}（--seed で指定可。対戦開始時にもサーバのログに出す。クライアントへは送らない）`);
   console.log('終了は Ctrl+C');
 });

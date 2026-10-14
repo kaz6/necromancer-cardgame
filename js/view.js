@@ -31,6 +31,7 @@ const {
   isAttackable,
   isNecromancerAttackable,
   opponentOf,
+  controllerOf,
   summonSourceOwner,
   slotIndex,
   boardSize,
@@ -178,7 +179,8 @@ function debugSummaryNode() {
     );
     if (i < DEBUG_RULES.length - 1) wrap.appendChild(el('span', '', '・'));
   });
-  wrap.appendChild(el('span', '', `｜シード ${ui.seed}`));
+  // LAN ではシードをクライアントへ渡さない（NC-003）。ローカルのときだけ出す
+  if (!remote) wrap.appendChild(el('span', '', `｜シード ${ui.seed}`));
   const pending = DEBUG_RULES.filter((r) => ui.debug[r.key] !== r.fromState(state));
   if (pending.length) {
     wrap.appendChild(
@@ -451,7 +453,7 @@ function recordAction(before, after, action) {
     const b = before.cards[iid];
     if (!b || b.transformed || !after.cards[iid].transformed) continue;
     logLine(
-      after.cards[iid].controller,
+      controllerOf(after, iid),
       'death',
       `　${nameOf(after, iid)} が倒れたが後列へ退いた（${attackOf(after, iid)}/${healthOf(after, iid)}）`
     );
@@ -1452,12 +1454,11 @@ root.NECRO_VIEW = {
 
   /**
    * サーバから受け取ったフィルタ済み state を反映して描き直す。
-   * settings / seed は summary 行（既定と違う値に★）の表示に使う。
+   * settings は summary 行（既定と違う値に★）の表示に使う。
    * log はサーバが完全 state の差分から組み立てた行動ログ（公開情報のみ）。
    */
-  applyRemoteState(filtered, log, seed, settings) {
+  applyRemoteState(filtered, log, settings) {
     state = filtered;
-    if (typeof seed === 'number') ui.seed = seed;
     if (settings) {
       for (const r of DEBUG_RULES) {
         if (settings[r.key] !== undefined) ui.debug[r.key] = settings[r.key];
