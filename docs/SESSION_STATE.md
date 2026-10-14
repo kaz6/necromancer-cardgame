@@ -1,5 +1,5 @@
 > **正本（repo）。写しは Notion の「SESSION_STATE（写し・閲覧用）」（`3f9a8a5d-fd45-818d-9757-f934f963dbe1`）で、repo から生成される写し。** 直すのはこのファイル。Notion 側を直しても次の更新で消える。
-> 更新: 2026-10-14 22:59 JST（NC-002）／コード HEAD `c7b26f1`（ゲームのコードは `7f78c8f` から無変更）
+> 更新: 2026-10-14 22:59 JST（NC-002）／コード HEAD `c7b26f1`
 
 # SESSION_STATE
 
@@ -7,7 +7,7 @@
 - **企画**: 「ネクロマンサーカードゲーム（仮）」。旧企画「持ち駒カードゲーム（仮）」から2026-10-13に分かれた。企画ページ `3f8a8a5d-fd45-81f0-add6-f053a7c2f107`。
 - **実装**: v0.2-final（`7f78c8f`）を土台に、このリポジトリ kaz6/necromancer-cardgame で進める。**ゲームのコードは `7f78c8f` から無変更**（NC-001 は settings.json だけ、NC-002 は文書だけ）。
 - **完了したタスク**:
-	- NC-001: v0.2-final の棚卸し・調査のみ（HEAD `86e4eaa`、2026-10-14 10:23 JST。PR #1 で main へマージ済み）。
+	- NC-001: v0.2-final の棚卸し・調査のみ（HEAD `86e4eaa`、2026-10-14 10:23 JST。PR #1 で main へマージ済み・`c7b26f1`）。
 	- NC-002: 記録先をこの企画へ付け替えた（2026-10-14）。CLAUDE.md の ID 表・package.json・README を差し替え、旧企画のページは「参照のみ・書き込み禁止」に分けた。session-end スキルを現行のマスターで置き換えた（企画固有の差分なし）。docs/ を作り直し、旧企画から引き継いだ CONCEPT・NEXT_TASKS・ARCHITECTURE_PRINCIPLES は消し、REJECTED と research/ は参照のみで残した。
 - **正本の向き**（CLAUDE.md §1）: DECISION_LOG＝Notion／SESSION_STATE・CURRENT_SPEC＝repo（Notion は生成物の写し）。
 - **検証**: `node js/engine.js` 123件成功、`node js/ai.js` 16件成功（HEAD `c7b26f1`・2026-10-14）。
