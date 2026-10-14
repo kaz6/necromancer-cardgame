@@ -15,7 +15,7 @@
 		- controller: カードの状態から欄を消し、engine の `controllerOf(state, iid)` で場所から求める。読んでいた3か所（ai.js のセルフテスト・view.js と server.js のログ表示）を置き換えた。
 		- 振る舞いが変わっていない証明（controller の欄を除いて比較）: CPU 同士 500 戦（シード 1000〜1499）の要約 JSON がバイト単位で一致、CPU 100 戦（シード 1000〜1099、7,514 手）の全 state・全 action のハッシュが前後で一致。
 - **正本の向き**（CLAUDE.md §1）: DECISION_LOG＝Notion／SESSION_STATE・CURRENT_SPEC＝repo（Notion は生成物の写し）。
-- **検証**: `node js/engine.js` 131件成功、`node js/ai.js` 16件成功（HEAD `27d44f9`・2026-10-14）。file:// で `index.html` を CPU vs CPU で決着まで動かし（シード 1003・1008、赤い枠なし・エラー 0）、LAN は実サーバ（`--seed 4242`）で、ゲストの応答にシード・相手の手札・相手のデッキの中身が無いことを確かめた。
+- **検証**: `node js/engine.js` 131件成功、`node js/ai.js` 16件成功（HEAD `27d44f9`・2026-10-14）。ブラウザで `index.html` をファイルとして直接開き、CPU vs CPU で決着まで動かし（シード 1003・1008、赤い枠なし・エラー 0）、LAN は実サーバ（`--seed 4242`）で、ゲストの応答にシード・相手の手札・相手のデッキの中身が無いことを確かめた。
 - **いま実装されているルール**: CURRENT_SPEC.md を参照。
 
 # 次にやること
