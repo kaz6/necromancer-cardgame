@@ -64,6 +64,27 @@ function opponentOf(playerId) {
   return playerId === 'p1' ? 'p2' : 'p1';
 }
 
+/**
+ * 駒がいま誰の配下かは、置かれている場所で決める（DECISION_LOG 2026-10-14・U0）。
+ * 駒自身には持ち主（owner・生涯変わらない）だけを持たせ、いまの側は持たせない。
+ *   - どちらかのネクロマンサー枠・場・墓地・手札・デッキに入っていれば、その持ち主
+ *   - どこにも無ければ null（消滅した駒など）
+ * 里帰り（奪った駒が自分の場で死ぬと元の持ち主の墓地へ帰る）では owner と一致するが、
+ * 奪った駒が場にあるあいだは owner と食い違う。ルールの判定はこの関数（＝場所）で行う。
+ */
+function controllerOf(state, iid) {
+  for (const pid of PLAYERS) {
+    const p = state.players[pid];
+    if (
+      p.necromancer === iid ||
+      p.board.includes(iid) || p.graveyard.includes(iid) || p.hand.includes(iid) || p.deck.includes(iid)
+    ) {
+      return pid;
+    }
+  }
+  return null;
+}
+
 function slotIndex(row, col, rules) {
   return row * rules.board.cols + col;
 }
@@ -406,7 +427,6 @@ function createInitialState(seed, cardData, options = {}) {
       iid,
       cardId,
       owner,        // 元の持ち主。生涯変わらない（UI の「元は誰のものか」表示に使う）
-      controller: owner,
       damage: 0,
       attacksUsed: 0,
       summonedTurn: 0,
@@ -498,22 +518,20 @@ function pushLog(state, line) {
 // ---------------------------------------------------------------------------
 
 /**
- * 墓地へ入るときのインスタンスの姿。
- *   - 場での状態（ダメージ・攻撃済み・能力による数値の上書き）を落とす
- *   - controller をその墓地の持ち主に合わせる
- *   - 呪い（c08）は「墓地に入ってから最初の1回」を数え直すので再武装する
- */
-/**
  * 墓地に入った瞬間のインスタンスを作る。**墓地へ入る経路はすべてここを通す。**
  * （戦闘での撃破 / c07 のデッキ送り / ピッチ / 配置換えの支払い）
+ *
+ * 墓地へ入るときのインスタンスの姿:
+ *   - 場での状態（ダメージ・攻撃済み・能力による数値の上書き）を落とす
+ *   - 呪い（c08）は「墓地に入ってから最初の1回」を数え直すので再武装する
+ *   - 誰の墓地かは駒に書かない。呼び出し側が graveyards の並びへ入れる（controllerOf で求まる）
  *
  * `turn` は「墓地に入った手番」。`rules.graveyardSummonBuffer` の判定に使う。
  * state.turn をそのまま刻むだけなので決定性には影響しない。
  */
-function toGraveyardInstance(defs, inst, graveOwner, turn) {
+function toGraveyardInstance(defs, inst, turn) {
   const next = {
     ...inst,
-    controller: graveOwner,   // owner は生涯変わらない
     damage: 0,
     attacksUsed: 0,
     stats: null,
@@ -562,7 +580,7 @@ function rightSlotOf(rules, slot) {
  *
  * @returns {'retreat'|'vanish'|'graveyard'} どの経路で処理したか
  */
-function resolveDeath(ctx, iid, controllerId, slot) {
+function resolveDeath(ctx, iid, boardSide, slot) {
   const { rules, defs } = ctx;
   const inst = ctx.cards[iid];
   const ab = defs[inst.cardId]?.ability;
@@ -570,7 +588,7 @@ function resolveDeath(ctx, iid, controllerId, slot) {
 
   // --- c05: 倒されたとき、1/1 になって後列へ移動する ---
   if (ab && ab.effect === 'retreatToBackRow' && !inst.transformed) {
-    const board = ctx.boards[controllerId];
+    const board = ctx.boards[boardSide];
     let dest = retreatSlotFor(rules, board, slot);
     // 後列に空きがない場合の挙動は rules.abilities.deathRetreatNoRoom で切り替える。
     // 既定は 'toGraveyard'（＝不発。通常どおり相手の墓地へ）。
@@ -590,7 +608,7 @@ function resolveDeath(ctx, iid, controllerId, slot) {
         transformed: true,
       };
       ctx.log.push(
-        `${name} は倒れたが ${ctx.names[controllerId]} の後列へ退いた（${ctx.cards[iid].stats.attack}/${ctx.cards[iid].stats.health}）`
+        `${name} は倒れたが ${ctx.names[boardSide]} の後列へ退いた（${ctx.cards[iid].stats.attack}/${ctx.cards[iid].stats.health}）`
       );
       return 'retreat';
     }
@@ -601,7 +619,7 @@ function resolveDeath(ctx, iid, controllerId, slot) {
   // 「トークンかどうか」では分岐しない（data/cards.js の tokens で切り替える）。
   // 省略時は 'toGraveyard'（＝CG-006 までの挙動）。
   if ((defs[inst.cardId]?.onDeath || 'toGraveyard') === 'vanish') {
-    ctx.boards[controllerId][slot] = null;
+    ctx.boards[boardSide][slot] = null;
     // どのゾーンにも属さなくなるので実体も落とす（残すと state に孤児が溜まる）。
     // iid の採番は単調増加なので、消しても決定性には影響しない。
     delete ctx.cards[iid];
@@ -609,11 +627,11 @@ function resolveDeath(ctx, iid, controllerId, slot) {
     return 'vanish';
   }
 
-  // --- 通常: 倒した側（controller の相手）の墓地へ ---
-  const graveOwner = opponentOf(controllerId);
-  ctx.boards[controllerId][slot] = null;
+  // --- 通常: 倒した側（いま倒れた駒が置かれていた場の側の相手）の墓地へ ---
+  const graveOwner = opponentOf(boardSide);
+  ctx.boards[boardSide][slot] = null;
   ctx.graveyards[graveOwner] = [...ctx.graveyards[graveOwner], iid];
-  ctx.cards[iid] = toGraveyardInstance(defs, inst, graveOwner, ctx.turn);
+  ctx.cards[iid] = toGraveyardInstance(defs, inst, ctx.turn);
   return 'graveyard';
 }
 
@@ -634,7 +652,7 @@ function resolveKillTrigger(ctx, killerIid, killerSide) {
   ctx.decks[foe] = ctx.decks[foe].slice(taken.length);
   ctx.graveyards[killerSide] = [...ctx.graveyards[killerSide], ...taken];
   for (const iid of taken) {
-    ctx.cards[iid] = toGraveyardInstance(ctx.defs, ctx.cards[iid], killerSide, ctx.turn);
+    ctx.cards[iid] = toGraveyardInstance(ctx.defs, ctx.cards[iid], ctx.turn);
   }
   ctx.log.push(
     `${ctx.defs[ctx.cards[killerIid].cardId].name} の効果で ${ctx.names[foe]} のデッキ上 ${taken.length} 枚が ${ctx.names[killerSide]} の墓地へ`
@@ -683,7 +701,6 @@ function doSummon(state, action) {
     board[p.slot] = p.iid;
     cards[p.iid] = {
       ...cards[p.iid],
-      controller: pid,       // owner は変えない
       damage: 0,
       attacksUsed: 0,
       stats: null,           // 墓地から出し直したら「刷られた数値」に戻る
@@ -702,7 +719,7 @@ function doSummon(state, action) {
   graveyards[src] = graveyards[src].filter((iid) => !graveTaken.has(iid));
   graveyards[foe] = [...graveyards[foe], ...pitch];
   for (const iid of pitch) {
-    cards[iid] = toGraveyardInstance(state.defs, cards[iid], foe, state.turn);
+    cards[iid] = toGraveyardInstance(state.defs, cards[iid], state.turn);
   }
 
   // 呪い（c08）を発動済みにする。判定は canSummon が済ませてあるので、
@@ -728,7 +745,6 @@ function doSummon(state, action) {
       iid,
       cardId: tokenId,
       owner: pid,
-      controller: pid,
       damage: 0,
       attacksUsed: 0,
       summonedTurn: state.turn,
@@ -880,9 +896,9 @@ function doReposition(state, action) {
     hand = me.hand.filter((iid) => !set.has(iid));
     opGrave = [...opGrave, ...pitch];
     // 墓地へ入る経路なので、召喚時のピッチと同じ処理を通す
-    // （controller の付け替え・呪いの再武装・墓地に入った手番の記録）。
+    // （呪いの再武装・墓地に入った手番の記録）。
     for (const iid of pitch) {
-      movedToGrave[iid] = toGraveyardInstance(state.defs, state.cards[iid], opponentOf(pid), state.turn);
+      movedToGrave[iid] = toGraveyardInstance(state.defs, state.cards[iid], state.turn);
     }
   }
 
@@ -998,6 +1014,7 @@ const engine = {
   shuffle,
   PLAYERS,
   opponentOf,
+  controllerOf,
   slotIndex,
   slotRowCol,
   boardSize,
@@ -1173,15 +1190,28 @@ if (isNodeMain) {
     }
   }
 
-  // --- 5. 一貫法則: 自分のカードは自分の墓地に存在しない ---
+  // --- 5. 一貫法則（里帰りを認める形）---
+  // 「自分の墓地に自分のカードは存在しない」は検査しない。奪った駒が自分の場で死ぬと
+  // 元の持ち主の墓地へ帰る（里帰り）のは、この企画では仕掛けとして認める
+  // （DECISION_LOG 2026-10-14）。保たれるべきなのは位置の側の不変条件:
+  //   どの駒も、ネクロマンサー枠・場・墓地・手札・デッキのちょうど1か所にあり、
+  //   controllerOf はその持ち主に一致する。
   const end = runA.state;
-  let lawHolds = true;
-  for (const pid of PLAYERS) {
-    for (const iid of end.players[pid].graveyard) {
-      if (end.cards[iid].owner === pid) lawHolds = false;
+  {
+    let placed = 0, mismatch = 0;
+    for (const iid of Object.keys(end.cards)) {
+      const where = [];
+      for (const pid of PLAYERS) {
+        const p = end.players[pid];
+        if (p.necromancer === iid) where.push(pid);
+        for (const list of [p.board, p.graveyard, p.hand, p.deck]) if (list.includes(iid)) where.push(pid);
+      }
+      if (where.length === 1 && controllerOf(end, iid) === where[0]) placed++; else mismatch++;
     }
+    check('どの駒もちょうど1か所にあり、配下は置かれた場所で求まる', mismatch === 0 && placed === Object.keys(end.cards).length);
+    check('カードの状態に controller の欄が無い（配下は場所が正）',
+      Object.values(end.cards).every((c) => !('controller' in c)));
   }
-  check('自分の墓地に自分のカードが存在しない（一貫法則）', lawHolds);
 
   // --- 6. カードの総数が保存される（能力で生成されたトークンは母数に入れない） ---
   let total = 0;
@@ -1342,13 +1372,89 @@ if (isNodeMain) {
     const data = { ...cardData, rules: { ...cardData.rules, summonSource: mode } };
     const r = playout(2024, 400, data);
     check(`summonSource=${mode} で最後まで進行する`, r.state.turn > 1);
+    // 里帰りがあり得るので「自分の墓地に自分のカードが無い」は検査しない。位置が一意なことを見る
+    const seen = new Set();
     let ok = true;
     for (const pid of PLAYERS) {
-      for (const iid of r.state.players[pid].graveyard) {
-        if (r.state.cards[iid].owner === pid) ok = false;
+      const p = r.state.players[pid];
+      for (const iid of [...p.deck, ...p.hand, ...p.graveyard, ...p.board.filter(Boolean)]) {
+        if (seen.has(iid)) ok = false;
+        seen.add(iid);
       }
     }
-    check(`summonSource=${mode} でも一貫法則が保たれる`, ok);
+    check(`summonSource=${mode} でも駒の位置が一意に保たれる`, ok);
+  }
+
+  // --- 10c. 死んだ駒の行き先は「死んだ時点で置かれていた場」で決まる（U0・里帰り） ---
+  {
+    const slot00 = slotIndex(0, 0, rules);
+    const attack = (st, target) => reduce(st, {
+      type: 'attack', attackerSlot: slot00, target: { kind: 'unit', slot: target },
+    });
+
+    // (1) 相手の場の駒が死ぬ → 相手の場の側の「相手」＝倒した側の墓地へ
+    {
+      let s = createInitialState(4701, cardData);
+      let t;
+      t = takeFromDeck(s, 'p1', 'c03'); s = t.s; const atk = t.iid;    // 3/2
+      t = takeFromDeck(s, 'p2', 'c01'); s = t.s; const prey = t.iid;   // 1/1（持ち主 p2）
+      s = place(s, 'p1', slot00, atk);
+      s = place(s, 'p2', slot00, prey);
+      const after = attack(ready(s, 'p1'), slot00);
+      check('場の駒が死んだら、置かれていた場の側の相手（倒した側）の墓地へ行く',
+        after.players.p1.graveyard.includes(prey) && !after.players.p2.graveyard.includes(prey));
+      check('死んだ駒は場から消え、いまの配下は墓地の持ち主（p1）、持ち主は p2 のまま',
+        !after.players.p2.board.includes(prey) && controllerOf(after, prey) === 'p1' && after.cards[prey].owner === 'p2');
+    }
+
+    // (2) 自分の場の駒が反撃で死ぬ → 相手の墓地へ
+    {
+      let s = createInitialState(4702, cardData);
+      let t;
+      t = takeFromDeck(s, 'p1', 'c01'); s = t.s; const weak = t.iid;   // 1/1（攻撃側・反撃で死ぬ）
+      t = takeFromDeck(s, 'p2', 'c03'); s = t.s; const guard = t.iid;  // 3/2
+      s = place(s, 'p1', slot00, weak);
+      s = place(s, 'p2', slot00, guard);
+      const after = attack(ready(s, 'p1'), slot00);
+      check('自分の場の駒が反撃で死んだら、相手の墓地へ行く',
+        after.players.p2.graveyard.includes(weak) && !after.players.p1.graveyard.includes(weak));
+    }
+
+    // (3) 里帰り: 墓地から呼んだ敵の駒が死ぬと、元の持ち主の墓地へ帰る
+    {
+      let s = createInitialState(4703, cardData);
+      let t;
+      t = takeFromDeck(s, 'p2', 'c01'); s = t.s; const stolen = t.iid;   // 持ち主 p2 の 1/1
+      t = takeFromDeck(s, 'p2', 'c03'); s = t.s; const killer = t.iid;   // p2 の 3/2
+      // stolen は p1 が倒して奪った体で、p1 の墓地に置く（手札からは外す）
+      const cards = { ...s.cards, [stolen]: toGraveyardInstance(s.defs, s.cards[stolen], s.turn) };
+      s = {
+        ...s,
+        cards,
+        players: {
+          ...s.players,
+          p1: { ...s.players.p1, graveyard: [stolen] },
+          p2: { ...s.players.p2, hand: s.players.p2.hand.filter((i) => i !== stolen && i !== killer) },
+        },
+      };
+      s = ready(s, 'p1');
+      const pitch = [s.players.p1.hand[0]];
+      const plan = [{ iid: stolen, from: 'graveyard', slot: slot00 }];
+      const chk = canSummon(s, 'p1', pitch, plan);
+      check('里帰り前提: 自分の墓地の敵の駒を呼べる', chk.ok);
+      let called = reduce(s, { type: 'summon', pitch, plays: plan });
+      check('呼んだ敵の駒は p1 の場に出て、配下は p1・持ち主は p2',
+        called.players.p1.board[slot00] === stolen && controllerOf(called, stolen) === 'p1' &&
+        called.cards[stolen].owner === 'p2');
+      // p2 の手番にして、p2 の駒で殴り倒す
+      called = place({ ...called, active: 'p2' }, 'p2', slot00, killer);
+      const after = attack(ready(called, 'p2'), slot00);
+      check('p1 の場で死んだ敵の駒は、元の持ち主 p2 の墓地へ帰る（里帰り）',
+        after.players.p2.graveyard.includes(stolen) && !after.players.p1.graveyard.includes(stolen) &&
+        !after.players.p1.board.includes(stolen));
+      check('里帰りした駒は自分の墓地にあり、持ち主と配下が一致する',
+        controllerOf(after, stolen) === 'p2' && after.cards[stolen].owner === 'p2');
+    }
   }
 
   // =========================================================================
@@ -1387,7 +1493,7 @@ if (isNodeMain) {
     return {
       ...s,
       players: { ...s.players, [pid]: { ...s.players[pid], board } },
-      cards: { ...s.cards, [iid]: { ...s.cards[iid], controller: pid, damage: 0, attacksUsed: 0 } },
+      cards: { ...s.cards, [iid]: { ...s.cards[iid], damage: 0, attacksUsed: 0 } },
     };
   }
 
@@ -1641,7 +1747,7 @@ if (isNodeMain) {
         grave.push(t.iid);
       }
       const cards = { ...s.cards };
-      for (const iid of grave) cards[iid] = { ...cards[iid], controller: 'p1', curseArmed: true };
+      for (const iid of grave) cards[iid] = { ...cards[iid], curseArmed: true };
       // p1 の手札を作り直す（コスト1と2を1枚ずつ = ピッチ用）
       const hand = [];
       t = takeFromDeck(s, 'p1', 'c01'); s = t.s; hand.push(t.iid);      // 1pt
@@ -1686,7 +1792,7 @@ if (isNodeMain) {
       ...after,
       cards: {
         ...after.cards,
-        [curses[0]]: toGraveyardInstance(after.defs, after.cards[curses[0]], 'p1', after.turn),
+        [curses[0]]: toGraveyardInstance(after.defs, after.cards[curses[0]], after.turn),
       },
     };
     check('c08: 墓地に入り直したら再武装する', graveyardSummonTax(reArmed, 'p1') === 1);
@@ -1837,7 +1943,7 @@ if (isNodeMain) {
       t = takeFromDeck(s, 'p2', 'c01'); s = t.s; const revive = t.iid;   // コスト1。蘇生対象
       t = takeFromDeck(s, 'p2', 'c08'); s = t.s; const curse = t.iid;    // 呪い
       const cards = { ...s.cards };
-      for (const iid of [revive, curse]) cards[iid] = { ...cards[iid], controller: 'p1', curseArmed: true };
+      for (const iid of [revive, curse]) cards[iid] = { ...cards[iid], curseArmed: true };
       s = {
         ...s,
         cards,

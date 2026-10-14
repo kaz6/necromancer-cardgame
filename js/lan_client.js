@@ -99,7 +99,7 @@ function applyServer(r) {
 
   $('game').style.display = '';
   $('settings-bar').style.display = '';
-  V.applyRemoteState(r.state, r.log, r.seed, r.settings);
+  V.applyRemoteState(r.state, r.log, r.settings);
   renderSetup(r);
 }
 

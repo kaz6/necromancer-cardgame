@@ -354,7 +354,7 @@ if (isNodeMain) {
     return {
       ...s,
       players: { ...s.players, [pid]: { ...s.players[pid], board } },
-      cards: { ...s.cards, [iid]: { ...s.cards[iid], controller: pid, damage: 0, attacksUsed: 0 } },
+      cards: { ...s.cards, [iid]: { ...s.cards[iid], damage: 0, attacksUsed: 0 } },
     };
   }
 
@@ -509,10 +509,10 @@ if (isNodeMain) {
     let controllerOk = true;
     for (const pid of PLAYERS) {
       for (const iid of s.players[pid].graveyard) {
-        if (s.cards[iid].controller !== pid) controllerOk = false;
+        if (engine.controllerOf(s, iid) !== pid) controllerOk = false;
       }
     }
-    check('墓地のカードの controller が墓地の持ち主になっている', controllerOk);
+    check('墓地のカードの配下が、置かれている墓地の持ち主として求まる', controllerOk);
   }
 
   // --- 9. ピッチ持ち越し（CG-015）: 持ち越した pt があればピッチ0枚で出す ---
